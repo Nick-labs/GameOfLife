@@ -15,6 +15,7 @@ class App:
 
     def run(self):
         running = True
+        pause = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -24,16 +25,18 @@ class App:
                 keys = pygame.key.get_pressed()
                 if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
                     self.board.change_state(*pygame.mouse.get_pos())
-                if keys[K_SPACE]:
-                    self.screen = pygame.display.set_mode(WINDOW_SIZE)
 
+                if event.type == pygame.KEYDOWN and keys[K_SPACE]:
+                    pause = not pause
+
+            if not pause:
                 self.board.do_step()
 
-                self.screen.fill(WHITE)
-                self.board.draw()
+            self.screen.fill(WHITE)
+            self.board.draw()
 
-                pygame.display.update()
-                self.clock.tick(FPS)
+            pygame.display.update()
+            self.clock.tick(FPS)
 
 
 class Board:
@@ -66,10 +69,20 @@ class Board:
         return self.arr
 
     def do_step(self):
-        self.arr = (np.roll(self.arr, (1, 0)) + np.roll(self.arr, (1, 1)) +
-                    np.roll(self.arr, (0, 1)) + np.roll(self.arr, (-1, 1)) +
-                    np.roll(self.arr, (-1, 0)) + np.roll(self.arr, (-1, -1)) +
-                    np.roll(self.arr, (0, -1)) + np.roll(self.arr, (1, -1)))
+        f_arr = self.arr.copy()
+        self.arr = (np.roll(self.arr, 1) + np.roll(self.arr, -1) +
+                    np.roll(self.arr, 1, axis=0) + np.roll(self.arr, -1, axis=0) +
+                    np.roll(np.roll(self.arr, 1, axis=0), 1) + np.roll(np.roll(self.arr, -1, axis=0), 1) +
+                    np.roll(np.roll(self.arr, 1, axis=0), -1) + np.roll(np.roll(self.arr, -1, axis=0), -1))
+
+        for i in range(self.arr.shape[1]):
+            for j in range(self.arr.shape[0]):
+                if self.arr[j, i] == born_if:
+                    self.arr[j, i] = 1
+                elif self.arr[j, i] == still_alive_if and f_arr[j, i] == 1:
+                    self.arr[j, i] = 1
+                else:
+                    self.arr[j, i] = 0
 
 
 if __name__ == '__main__':
