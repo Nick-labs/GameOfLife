@@ -11,7 +11,7 @@ class App:
         pygame.display.set_caption('Game of Life')
         self.screen = pygame.display.set_mode(WINDOW_SIZE)
         self.clock = pygame.time.Clock()
-        self.board = Board(self.screen, 16, 12)
+        self.board = Board(self.screen, 64, 48)
 
     def run(self):
         running = True
@@ -26,6 +26,8 @@ class App:
                     self.board.change_state(*pygame.mouse.get_pos())
                 if keys[K_SPACE]:
                     self.screen = pygame.display.set_mode(WINDOW_SIZE)
+
+                self.board.do_step()
 
                 self.screen.fill(WHITE)
                 self.board.draw()
@@ -62,6 +64,12 @@ class Board:
 
     def get_arr(self):
         return self.arr
+
+    def do_step(self):
+        self.arr = (np.roll(self.arr, (1, 0)) + np.roll(self.arr, (1, 1)) +
+                    np.roll(self.arr, (0, 1)) + np.roll(self.arr, (-1, 1)) +
+                    np.roll(self.arr, (-1, 0)) + np.roll(self.arr, (-1, -1)) +
+                    np.roll(self.arr, (0, -1)) + np.roll(self.arr, (1, -1)))
 
 
 if __name__ == '__main__':
