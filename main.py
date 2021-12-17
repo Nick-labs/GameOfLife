@@ -1,5 +1,6 @@
 import pygame
 from pygame import K_SPACE
+import numpy as np
 
 from settings import *
 
@@ -9,7 +10,8 @@ class App:
         pygame.init()
         pygame.display.set_caption('Game of Life')
         self.screen = pygame.display.set_mode(WINDOW_SIZE)
-        self.board = Board(16, 12)
+        self.clock = pygame.time.Clock()
+        self.board = Board(self.screen, 16, 12)
 
     def run(self):
         running = True
@@ -17,35 +19,54 @@ class App:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                pygame.mouse.get_pos()
 
                 keys = pygame.key.get_pressed()
-                # if keys[K_SPACE]:
-                # self.screen = pygame.display.set_mode(WINDOW_SIZE)
+                if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
+                    self.board.change_state(*pygame.mouse.get_pos())
+                if keys[K_SPACE]:
+                    self.screen = pygame.display.set_mode(WINDOW_SIZE)
 
-                self.screen.fill(BLACK)
-
-                self.board.draw(self.screen)
+                self.screen.fill(WHITE)
+                self.board.draw()
 
                 pygame.display.update()
+                self.clock.tick(FPS)
 
 
 class Board:
-    def __init__(self, w, h):
+    def __init__(self, screen, w, h):
         self.w = w
         self.h = h
+        self.screen = screen
+        self.width, self.height = screen.get_size()
+        self.step = min(self.width // self.w, self.height // self.h)
+        self.arr = np.zeros((h, w))
 
-    def draw(self, screen):
-        width, height = screen.get_size()
-
-        step = min(width // self.w, height // self.h)
+    def draw(self):
+        for y in range(self.h):
+            for x in range(self.w):
+                if self.arr[y, x]:
+                    pygame.draw.rect(self.screen, GREEN, (x * self.step, y * self.step, self.step, self.step))
 
         for x in range(1, self.w):
-            pygame.draw.line(screen, WHITE, (x * step, 0), (x * step, height))
+            pygame.draw.line(self.screen, BLACK, (x * self.step, 0), (x * self.step, self.height))
 
         for y in range(1, self.h):
-            pygame.draw.line(screen, WHITE, (0, y * step), (width, y * step))
+            pygame.draw.line(self.screen, BLACK, (0, y * self.step), (self.width, y * self.step))
+
+    def change_state(self, x, y):
+        nx = x // self.step
+        ny = y // self.step
+        self.arr[ny, nx] = 0 if self.arr[ny, nx] else 1
+
+    def get_arr(self):
+        return self.arr
 
 
 if __name__ == '__main__':
     app = App()
     app.run()
+
+# shift
+# roll
